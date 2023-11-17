@@ -1,0 +1,16 @@
+[
+    {
+    "payee" : "Bank of America",
+    "account" : "Credit Card",
+    "amount" : "100",
+    "date" : "2022-09-11",
+    "description" : "This is my real credit card"
+},
+{
+    "payee" : "Bank of America",
+    "account" : "Credit Card",
+    "amount" : "100",
+    "date" : "2022-09-11",
+    "description" : "This is my real credit card"
+}
+]
