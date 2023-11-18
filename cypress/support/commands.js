@@ -23,18 +23,3 @@
 //
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
-Cypress.Commands.add('login', (username, password) => {
-    cy.get('#user_login').type(username)
-    cy.get('#user_password').type(password)
-    cy.get('[type ="submit"]').click()
-    cy.url().should('include', '/bank/pay-bills.html')
-})
-
-Cypress.Commands.add('bills', (payee, account, amount, date, description) => {
-    cy.get('#sp_payee').select(payee).should('have.value', 'bofa')
-    cy.get('#sp_account').select(account).should('have.value', '5')
-    cy.get('input[name="amount"]').type(amount)
-    cy.get('input[name="date"]').type(date)
-    cy.contains('11').click()
-    cy.get('#sp_description').type(description)
-})

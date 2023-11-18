@@ -1,70 +1,98 @@
 /// <reference types ="Cypress"/>
 
-import { Given, When, Then} from "@badeball/cypress-cucumber-preprocessor";
-const tmdbMoviePageObject = require('../page_object/tmdb-movie-page-object')
+import {
+  Before,
+  Given,
+  When,
+  Then,
+} from "@badeball/cypress-cucumber-preprocessor";
 
-//User login in TMBD Movie webiste and switch language in Bahasa
+let userCookies;
+const username = "rinapriani24";
+const password = "tmdbtest";
+const baseUrl = "https://www.themoviedb.org";
 
-Given ('Open TMBD Movie website', () => {
-    cy.visit('https://www.themoviedb.org/')
+Before(() => {
+  cy.visit(baseUrl);
+  cy.get("#onetrust-accept-btn-handler")
+    .contains("Accept All Cookies")
+    .click({ force: true });
+
+  cy.contains("Login").click();
+  cy.get("#username").type(username);
+  cy.get("#password").type(password);
+  cy.get("#login_button").click();
+  cy.url().should("include", `/u/${username}`);
+
+  cy.getCookie("tmdb.session").then((cookie) => {
+    userCookies = cookie;
+    cy.log("tmdb.session Cookie:", userCookies);
+  });
 });
 
-When ('Acess the login page', () => {
-    //cy.get('a[href="/login"]').should('have.text', 'Login').click()
-    cy.contains('Login').click()
-    cy.get('#username').type('rinapriani24')
-    cy.get('#password').type('tmdbtest')
-    cy.get('#login_button').click()
-    cy.url().should('include','/u/rinapriani24')
-    cy.get('#onetrust-accept-btn-handler').contains('Accept All Cookies').click({force: true})
-    
+Given("I switch language in Bahasa", () => {
+  cy.visit(`${baseUrl}/settings/account`);
+
+  cy.get("span[role='option']").contains("English (en-US)").should("not.exist");
+  cy.get(".k-item").contains("Indonesian (id-ID)").click({ force: true });
+  cy.get('[type="submit"][value="Save"]').click({ timeout: 50000 });
+  cy.intercept("POST", "/pusher/auth").as("pusherAuth");
+  cy.scrollTo("top");
 });
 
+Given("Search movie and mark as favorite for movie 1", () => {
+  let movieName = "The Godfather";
+  cy.visit(baseUrl);
+  cy.get("input#inner_search_v4")
+    .type(movieName)
+    .get("input[value='Search']")
+    .click();
+  cy.url()
+    .should("contain", movieName.split(" ")[0])
+    .and("contain", movieName.split(" ")[1]);
+  cy.get("input#search_v4").should("have.value", movieName);
 
-Then ('I switch language in Bahasa', () => {
-    cy.visit('https://www.themoviedb.org/settings/account')
-    cy.wait(5)
-    // cy.get("span[role= 'option']").contains('English (en-US)').click()
-    // cy.get('.k-item').contains('Indonesian (id-ID)').click({force: true})
-    // cy.get('[type="submit"][value="Save"]').click({timeout : 50000});
-})
+  cy.get("div[id*='card_movie'] div.title h2").each(($el) => {
+    let elementText = $el.text().toLowerCase();
+    expect(elementText).to.include(movieName.split(" ")[0].toLowerCase());
+    expect(elementText).to.include(movieName.split(" ")[1].toLowerCase());
+  });
+  cy.wait(5000);
+  cy.contains(movieName).click();
+  cy.wait(5000);
+  cy.get("li.tooltip a#favourite").click();
+});
 
+When("Search movie and mark as favorite for movie 2", () => {
+  let movieName2 = "Gran Turismo";
+  cy.visit(baseUrl);
+  cy.get("input#inner_search_v4")
+    .type(movieName2)
+    .get("input[value='Search']")
+    .click();
+  cy.url()
+    .should("contain", movieName2.split(" ")[0])
+    .and("contain", movieName2.split(" ")[1]);
+  cy.get("input#search_v4").should("have.value", movieName2);
 
-// User perform search the favorite movie and doing mark as favorite movie
+  cy.get("div[id*='card_movie'] div.title h2").each(($el) => {
+    let elementText = $el.text().toLowerCase();
+    expect(elementText).to.include(movieName2.split(" ")[0].toLowerCase());
+    expect(elementText).to.include(movieName2.split(" ")[1].toLowerCase());
+  });
+  cy.wait(5000);
+  cy.contains(movieName2).click();
+  cy.wait(5000);
+  cy.get("li.tooltip a#favourite").click();
+});
 
-Given ('Search movie and mark as favorite for movie 1', () => {
-    cy.visit('https://www.themoviedb.org/')
-    cy.get('#onetrust-accept-btn-handler').contains('Accept All Cookies').click({force: true})
-    cy.get('#inner_search_v4').type('One Piece')
-    cy.get('[type="submit"][value="Search"]').click();
-    cy.get('[class= "result"]').contains('ONE PIECE').click()
-    cy.url().should('include','/tv/111110-one-piece')
-    // cy.get("span[class= 'glyphicons_v2 heart white false']").click()
-
-})
-
-When ('Search movie and mark as favorite for movie 2', () => {
-    cy.visit('https://www.themoviedb.org/')
-    cy.get('#inner_search_v4').type('SPY X FAMILY')
-    cy.get('[type="submit"][value="Search"]').click();
-    cy.get('[class= "result"]').contains('SPY x FAMILY').click()
-    cy.url().should('include','/tv/120089-spyxfamily')
-    cy.get("span[class= 'glyphicons_v2 heart white false']").click()
-
-})
-
-Then ('Search movie and Mark as favorite for movie 3', () => {
-    cy.visit('https://www.themoviedb.org/')
-    cy.get('#inner_search_v4').type('Avatar')
-    cy.get('[type="submit"][value="Search"]').click();
-    cy.get('[class= "result"]').contains('Avatar: The Way of Water').click()
-    cy.url().should('include','/movie/76600-avatar-the-way-of-water')
-    cy.get("span[class= 'glyphicons_v2 heart white false']").click()
-
-})
-
-
-Then ('Verify this movie show in favorite list in My Profile', () => {
-
-
-})
+Then(
+  "Then Verify this movie show in favorite list in My Profile and back back to homepage",
+  () => {
+    cy.visit(baseUrl);
+    cy.get('[class="no_click tooltip_hover"]').click();
+    cy.visit(`${baseUrl}/u/${username}/watchlist`);
+    cy.wait(5000);
+    cy.visit(baseUrl);
+  },
+);

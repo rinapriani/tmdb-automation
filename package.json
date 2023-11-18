@@ -12,7 +12,8 @@
   "devDependencies": {
     "@badeball/cypress-cucumber-preprocessor": "^13.0.2",
     "@bahmutov/cypress-esbuild-preprocessor": "^2.1.4",
-    "cypress": "^10.8.0"
+    "@walmyr-filho/cy-press": "^1.0.2",
+    "cypress": "^10.11.0"
   },
   "dependencies": {
     "pg": "^8.8.0"
